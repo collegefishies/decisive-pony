@@ -1,7 +1,10 @@
 PYCC=pypy
+PYTHONPATH = $PYTHONPATH:$pwd
 
 
-build:
+test_dec:
+	$(PYCC) testbench/tb_m_dec.py
+
 
 sync:
 	cp ~/bin/backup bin/
@@ -9,5 +12,6 @@ sync:
 	cp ~/bin/eqmplot bin/
 	cp ~/bin/toice bin/
 	cp ~/bin/vwrap bin/
-
 	git add bin/*
+	git add makefile
+	git push -u origin master
