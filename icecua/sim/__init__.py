@@ -1,2 +1,0 @@
-from .clkdriver import clkdriver
-
