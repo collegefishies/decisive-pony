@@ -15,16 +15,20 @@ def m_dec(clk, add,sub, q,incr=0,reset=None,N=10):
 	def wiring():
 		q.next = q_int
 
-	@always(q_int,*to_add)
+	@always(incr,q_int,*to_add)
 	def addlogic():
-		to_add[0].next = 1
-		for digit in range(1,N):
+		for digit in range(incr):
+			to_add[digit].next = 0
+		to_add[incr].next = 1
+		for digit in range(incr+1,N):
 			to_add[digit].next = (q_int_l[digit-1] == 9) and to_add[digit-1]
 
-	@always(q_int,*to_subtract)
+	@always(incr,q_int,*to_subtract)
 	def sublogic():
-		to_subtract[0].next = 1
-		for digit in range(1,N):
+		for digit in range(incr):
+			to_subtract[digit].next = 0
+		to_subtract[incr].next = 1
+		for digit in range(incr+1,N):
 			to_subtract[digit].next = (q_int_l[digit-1] == 0) and to_subtract[digit-1]
 
 	@always_seq(clk.posedge, reset=reset)
