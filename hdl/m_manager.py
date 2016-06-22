@@ -73,21 +73,21 @@ def m_manager(
 			waiter_en.next              	= False 
 			ready.next                  	= True
 		elif state == t_state.REACH_DESIRED:
-			dec_clk.next                	= dec_clk_int
+			dec_clk.next                	= not dec_clk_int #the not adds a clock cycle phase shift
 			add_o.next                  	= add_o_int
 			sub_o.next                  	= sub_o_int
 			frequency_controller_en.next	= True
 			waiter_en.next              	= False
 			ready.next                  	= False
 			#let frequency_controller do its thing
-		elif state == t_state.REACH_DESIRED_CHANGE_STEP:
-			dec_clk.next                	= dec_clk_int
-			add_o.next                  	= add_o_int
-			sub_o.next                  	= sub_o_int
-			frequency_controller_en.next	= True
-			waiter_en.next              	= False
-			ready.next                  	= False
-			#let frequency_controller do its thing
+		# elif state == t_state.REACH_DESIRED_CHANGE_STEP:
+		#	dec_clk.next                	= dec_clk_int
+		#	add_o.next                  	= add_o_int
+		#	sub_o.next                  	= sub_o_int
+		#	frequency_controller_en.next	= True
+		#	waiter_en.next              	= False
+		#	ready.next                  	= False
+		 	#let frequency_controller do its thing
 		else: #state == t_state.HOLD_FREQ:
 			dec_clk.next                	= 0
 			add_o.next                  	= 0

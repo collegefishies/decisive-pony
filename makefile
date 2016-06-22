@@ -1,17 +1,15 @@
 PYCC=pypy
-PYTHONPATH = $PYTHONPATH:$pwd
+CURDIR=$(shell pwd)
 
+virtual_uart:
+	cd ./run/; pwd; $(PYCC) -c 'import decisive_pony.virtual_uart'
+	gtkwave --cpu=4 run/test.vcd
 
 test_dec:
-	$(PYCC) testbench/tb_m_dec.py
-
-
+	cd ./run/; pwd; $(PYCC) -c 'import decisive_pony.testbench.tb_m_dec'
+	gtkwave --cpu=4 run/testbench.vcd
 sync:
-	# cp ~/bin/backup bin/
-	# cp ~/bin/catfile bin/
-	# cp ~/bin/eqmplot bin/
-	# cp ~/bin/toice bin/
-	# cp ~/bin/vwrap bin/
-	# git add bin/*
-	# git add makefile
 	git push -u origin master
+
+clean:
+	rm *.vcd*
