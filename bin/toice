@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e	#break if errors occurs
+
+if [ $# -eq 1 ]; then
+	FILE=$1
+	OPTION=""
+fi 
+
+if [ $# -eq 2 ]; then
+	FILE=$2
+	OPTION=$1
+fi
+ROOT=${FILE%%.*}
+
+yosys -p "synth_ice40 -blif $ROOT.blif" $ROOT.v
+arachne-pnr -d 8k -p $ROOT.pcf $ROOT.blif -o $ROOT.asc
+icepack $ROOT.asc $ROOT.bin
+sudo iceprog $OPTION $ROOT.bin
+

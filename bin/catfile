@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+#Free software can be bought from
+#http://directory.fsf.org/wiki/Main_Page
+
+
+ABSDIR=$(pwd)
+SCIFS="$HOME/.scifs"
+FILESTXT="$SCIFS/files.txt"
+
+ARGS=("$@")
+ARGC=$#
+
+#output message if there is no
+#arguments passed
+if [ $ARGC -eq 0 ]; then
+	echo
+	echo "	Usage: mkfile [file1] [file2] ... [fileN]"
+	echo "		File Cataloguer: Makes a copy of a file with"
+	echo "		a five digit hexadecimal number, keeps record"
+	echo "		in a file called \"~/.scifs/files.txt\""
+	echo 
+	echo "	If they do not exist, makes the directory"
+	echo "		~/.scifs where catalogued files are stored."
+	echo "	and the file \"files.txt\" where the records"
+	echo "	of files are kept."
+	echo
+	exit
+fi
+
+
+NEWFILE=0
+
+#make ~/.scifs/ folder
+if [ ! -d "$SCIFS" ]; then
+	echo "Making ~/.scifs/"
+	mkdir $SCIFS
+fi
+
+#make ~/.scifs/files.txt file for
+#keeping track of catalogued files
+if [ ! -e "$FILESTXT" ]; then
+	echo "Making files.txt"
+	# echo "" >> $FILESTXT
+	NEWFILE=1
+fi
+
+if [ $NEWFILE -eq 0 ]; then
+	LASTLINE=$(cat $FILESTXT | grep "[0-9]" -n | tail -1)
+	NUMFILES=${LASTLINE%:*}
+fi
+
+if [ $NEWFILE -eq 1 ]; then
+	NUMFILES=0
+fi
+
+
+for file in ${ARGS[*]}; do
+	if [ -e $file ]; then
+		NEWNAME=$(printf "%05X" $NUMFILES)
+		NUMFILES=$((NUMFILES+1))
+		CURNAME="$ABSDIR/$file"
+		cp -T $CURNAME "$SCIFS/$NEWNAME"
+		printf "$NEWNAME\t$CURNAME\n" >> $FILESTXT
+		echo "Success: $NEWNAME : Catalogued $file." 
+	fi
+
+	if [ ! -e $file ]; then
+		echo "Error: No such file : $file"
+	fi
+done

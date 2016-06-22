@@ -1,0 +1,62 @@
+#!/bin/bash
+
+FILE=""
+HEADER="from myhdl import *
+
+def " #name here
+BODY="():
+	
+	@always_comb
+	def wiring():
+		pass
+
+	return wiring
+
+
+"
+CLEAN="
+
+
+"
+VHDLPRE=".vhdl_code='''
+"
+VHDLEND="
+'''
+
+"
+VPRE=".verilog_code='''
+"
+VEND="
+'''
+
+"
+for FNAME in $@; do
+	#we can infer whether VHDL or Verilog from extension
+	EXT=${FNAME##*.}
+	ROOT=${FNAME%%.*}
+
+	if [[ ( $(echo $EXT | grep "[vV]") == "") && ( $(echo $EXT | grep "[vV][hH][dD]") == "") ]]; then
+		echo "Invalid File: $FNAME"
+		continue
+	fi
+
+	if [ ! -e "$ROOT.py" ]; then
+		FILE=$FILE$HEADER
+		FILE=$FILE$ROOT
+		FILE=$FILE$BODY
+		echo -e "$FILE" > $ROOT.py
+	fi
+
+	if [ -e "$ROOT.py" ]; then
+		if [[ $EXT == "V" || $EXT = "v" ]]; then
+			echo -e "$CLEAN" >> "$ROOT.py"
+			echo -e "$ROOT$VPRE$(cat $FNAME)$VEND" >> "$ROOT.py"
+		fi
+
+		if [[ $(echo $EXT | grep "[vV][hH][dD]") != "" ]]; then
+			echo -e "$CLEAN" >> "$ROOT.py"
+			echo -e "$ROOT$VHDLPRE$(cat $FNAME)$VHDLEND" >> "$ROOT.py"
+		fi
+	fi
+
+done

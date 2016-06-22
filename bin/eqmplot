@@ -1,0 +1,49 @@
+#gnuplot overlay for going from gnuplot file to tex file
+
+ARGS=$@
+ARGC=$#
+
+#help message
+printhelp(){
+	echo "	Usage: eqmplot [file-to-plot]"
+	echo "		Runs gnuplot [file-to-plot] just as otherwise"
+	echo "		If eqmplot -f [file-to-plot] is used, then it"
+	echo "		plots out the file to a pdf of the same name "
+	echo "	  but with a pdf at the end."
+}
+
+if [ $ARGC -eq 0 ]; then
+	printhelp
+	exit
+fi
+
+if [ $ARGC -eq 1 ]; then
+	if [ "$1" == "-f" ]; then 
+		printhelp
+		exit
+	fi
+	gnuplot -e "load '$1'; pause -1"
+	exit
+fi
+
+#Pulls the first line out of the file.
+#It then removes the comment, and prints
+#into that terminal. Assumes epslatex.
+if [ $ARGC -eq 2 ]; then
+	FIRSTLINE=$(cat $2 | head -1)
+	TERM=${FIRSTLINE#*#}
+	FNAME=$2
+	ROOT=${FNAME%%.*}
+	printf "Using the following terminal command:\n\t"
+	echo $TERM
+	echo "Using rootname: $ROOT"
+	COMMANDS="$TERM; set output '$ROOT.tex'; load '$2'; set output;"
+
+	gnuplot -e "$COMMANDS"
+	latexmk -pdf "$ROOT.tex"
+	latexmk -c
+	evince "$ROOT.pdf"
+	exit
+fi
+
+printhelp

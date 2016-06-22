@@ -1,0 +1,6 @@
+#!/bin/bash
+cd ~/.scifs/
+git add *
+git commit -m "Backup"
+git push mit
+echo "collegefishies"
