@@ -1,6 +1,4 @@
 from myhdl import *
-from icecua.hdl import 
-
 
 def pts_controller(hex_freq,pts_enable, amphenol):
 	@always_comb

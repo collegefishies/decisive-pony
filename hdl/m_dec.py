@@ -1,7 +1,7 @@
 from myhdl import *
 
 @block
-def m_dec(clk, add,sub, q,incr=0,reset=None,N=10):
+def m_dec(clk, add,sub, q,bq,incr=0,reset=None,N=10):
 	#whether or not we need to subtract/add a certain digit
 	to_subtract      	= [Signal(bool(0)) for i in range(N)]
 	# to_subtract_sig	= ConcatSignal(*to_subtract)
@@ -10,6 +10,7 @@ def m_dec(clk, add,sub, q,incr=0,reset=None,N=10):
 	#decomposition of the binary number we're working with
 	q_int_l = [Signal( intbv(0,min=0,max=10) ) for i in downrange(N)]
 	q_int	= ConcatSignal(*reversed(q_int_l))
+	bq = Signal(intbv(0,min=0,max=10**N))
 
 	@always(q_int,*q_int_l)
 	def wiring():
@@ -39,6 +40,7 @@ def m_dec(clk, add,sub, q,incr=0,reset=None,N=10):
 		else:
 			if add == True and (not sub):
 				#main stuff
+
 				for digit in range(incr+1,N):
 					if to_add[digit]:
 						if q_int_l[digit] != 9:

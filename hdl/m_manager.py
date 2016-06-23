@@ -34,9 +34,10 @@ def m_manager(
 	#define latches
 	curr_freq_latch 	= Signal(intbv(0,min=-10**N, max = 10**N))
 	set_freq_latch  	= Signal(intbv(0,min=-10**N, max = 10**N))
-	set_step_f_latch	= Signal(intbv(0,min=0))
-	set_step_t_latch	= Signal(intbv(0,min=0))
-	set_wait_latch  	= Signal(intbv(0,min=0)) #hold time
+	set_step_f_latch	= Signal(intbv(0,min=0,max=N+1))
+	set_step_f_int  	= Signal(intbv(0,min=0,max=N+1))
+	set_step_t_latch	= Signal(intbv(0,min=0,max=10**N))
+	set_wait_latch  	= Signal(intbv(0,min=0,max=10**N)) #hold time
 
 	#define internal enables
 	frequency_controller_en	= Signal(bool(0))
@@ -53,9 +54,9 @@ def m_manager(
 	dec_clk_int	= Signal(bool(0))
 
 
-	@always(start.posedge)
+	@always_seq(clk.posedge,reset=reset)
 	def latcher():
-		if ready:
+		if ready and start:
 			set_freq_latch.next  	= set_freq
 			set_step_f_latch.next	= set_step_f
 			set_step_t_latch.next	= set_step_t
@@ -63,7 +64,7 @@ def m_manager(
 
 			state.next	= t_state.REACH_DESIRED
 
-	@always(state,clk)
+	@always(state,clk.negedge,dec_clk_int)
 	def fsm():
 		if state == t_state.WAIT:
 			dec_clk.next                	= 0
@@ -73,7 +74,7 @@ def m_manager(
 			waiter_en.next              	= False 
 			ready.next                  	= True
 		elif state == t_state.REACH_DESIRED:
-			dec_clk.next                	= not dec_clk_int #the not adds a clock cycle phase shift
+			dec_clk.next                	= dec_clk_int #the not adds a clock cycle phase shift
 			add_o.next                  	= add_o_int
 			sub_o.next                  	= sub_o_int
 			frequency_controller_en.next	= True
@@ -105,7 +106,7 @@ def m_manager(
 	def wiring():
 		freq_controller_clk.next	= frequency_controller_en and clk
 		waiter_clk.next         	= waiter_en	and clk
-		dec_clk_int.next        	= dec_clk_en and clk
+		dec_clk_int.next        	= dec_clk_en and not clk
 
 	delta_freq	= Signal(intbv(0,min = 0, max = 10**N))
 	#step direction. move either up or down towards desired frequency
@@ -124,14 +125,14 @@ def m_manager(
 		#note that when it inevitably overshoots
 		#the step goes down and compensates for it by 
 		#switching direction.
-		if curr_freq_latch > set_freq_latch:
+		if curr_freq_latch > set_freq_latch + delta_freq:
 			if direction == d_state.UP:
 				if set_step_f_latch >= 1:
 					set_step_f_latch.next = set_step_f_latch - 1
 				direction.next = d_state.DOWN
 			else:
 				direction.next = d_state.DOWN
-		elif curr_freq_latch < set_freq_latch:
+		elif curr_freq_latch < set_freq_latch - delta_freq:
 			if direction == d_state.DOWN:
 				if set_step_f_latch >= 1:
 					set_step_f_latch.next = set_step_f_latch - 1

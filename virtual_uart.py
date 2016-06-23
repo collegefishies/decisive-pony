@@ -4,8 +4,8 @@ from icecua.hdl import rom
 from icecua import sim
 from pyprind import ProgBar #just for funsies.
 
-sim_time = 100000000
 sim_time = 10000
+sim_time = 100000000
 
 @block
 def test(clk,hex_freq):
@@ -85,7 +85,7 @@ def test(clk,hex_freq):
 			N=N
 		)
 
-	@always_seq(clk.posedge,reset=None)
+	@always_seq(ready.posedge,reset=None)
 	def arbiter():
 		if ready == True:
 			start.next = 1 and not done
@@ -100,5 +100,6 @@ def test(clk,hex_freq):
 clk = Signal(bool(0))
 hex_freq = Signal(intbv(0,min=0,max=int(3.2e9)))
 inst = test(clk,hex_freq)
+# inst.convert()
 inst.config_sim(trace=True)
 inst.run_sim(sim_time)
