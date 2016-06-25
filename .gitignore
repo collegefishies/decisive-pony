@@ -1,0 +1,7 @@
+**.pyc
+**/**.pyc
+testbench/
+rtl**/
+build/
+run/
+experimental/
