@@ -90,7 +90,7 @@ def m_manager(
 		else:
 			start_holding_turnedon.next = 0
 
-	@always(state,clk,start,quit)
+	@always(state,clk,start,quit_turnedon,dec_clk_int,add_o_int,sub_o_int,start_holding_turnedon)
 	def fsm():
 		''' Our beloved finite state machine! For controlling the frequency stepping of the PTS.
 		It drives m_dec, which is a special counter that has both a binary output, and hexadecimal
