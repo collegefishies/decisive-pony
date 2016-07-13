@@ -1,7 +1,8 @@
 from myhdl import *
-from icecua.hdl import 
+from icecua.hdl import *
 
 
+@block
 def pts_controller(hex_freq,pts_enable, amphenol):
 	@always_comb
 	def wiring():
@@ -66,4 +67,4 @@ def pts_controller(hex_freq,pts_enable, amphenol):
 		amphenol_l[13].next	= 1 #not hex_freq[-3]	#unknown probably tens or ones digit
 		amphenol_l[12].next	= 1 #not hex_freq[-4]	#unknown probably tens or ones digit
 
-		return wiring
+	return wiring
