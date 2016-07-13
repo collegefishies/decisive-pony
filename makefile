@@ -3,7 +3,7 @@ CURDIR=$(shell pwd)
 
 virtual_uart:
 	cd ./run/; pwd; $(PYCC) -c 'import decisive_pony.virtual_uart'
-	gtkwave -o --cpu=4 run/test.vcd
+	gtkwave  --cpu=4 run/test.vcd
 	rm run/test.vcd
 
 test_dec:
