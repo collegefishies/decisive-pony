@@ -78,7 +78,7 @@ def m_manager(
 			waiter_en.next              	= False 
 			ready.next                  	= True
 		elif state == t_state.REACH_DESIRED:
-			dec_clk.next                	= dec_clk_int #the not adds a half clock cycle phase shift
+			dec_clk.next                	= dec_clk_int 
 			add_o.next                  	= add_o_int
 			sub_o.next                  	= sub_o_int
 			frequency_controller_en.next	= True
