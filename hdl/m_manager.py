@@ -5,6 +5,8 @@ def m_manager(
 	#inputs
 	set_freq, set_step_f,set_step_t, set_wait, start, done,
 	clk,reset,
+	#control inputs
+	bq,
 	#outputs
 		#m_dec control signals
 	add_o,sub_o,incr_o,dec_clk,
@@ -32,7 +34,7 @@ def m_manager(
 	'''
 
 	#define latches
-	curr_freq_latch 	= Signal(intbv(0,min=-10**N, max = 10**N))
+	curr_freq       	= Signal(intbv(0,min=-10**N, max = 10**N))
 	set_freq_latch  	= Signal(intbv(0,min=-10**N, max = 10**N))
 	set_step_f_latch	= Signal(intbv(0,min=0))
 	set_step_t_latch	= Signal(intbv(0,min=0))
@@ -65,6 +67,9 @@ def m_manager(
 
 	@always(state,clk)
 	def fsm():
+		''' Our beloved finite state machine! For controlling the frequency stepping of the PTS.
+		It drives m_dec, which is a special counter that has both a binary output, and hexadecimal
+		output (which is what the PTS needs. It steps through the frequency schedule.'''
 		if state == t_state.WAIT:
 			dec_clk.next                	= 0
 			add_o.next                  	= 0
@@ -73,7 +78,7 @@ def m_manager(
 			waiter_en.next              	= False 
 			ready.next                  	= True
 		elif state == t_state.REACH_DESIRED:
-			dec_clk.next                	= not dec_clk_int #the not adds a clock cycle phase shift
+			dec_clk.next                	= dec_clk_int #the not adds a half clock cycle phase shift
 			add_o.next                  	= add_o_int
 			sub_o.next                  	= sub_o_int
 			frequency_controller_en.next	= True
@@ -106,12 +111,13 @@ def m_manager(
 		freq_controller_clk.next	= frequency_controller_en and clk
 		waiter_clk.next         	= waiter_en	and clk
 		dec_clk_int.next        	= dec_clk_en and clk
+		curr_freq.next          	= bq
 
 	delta_freq	= Signal(intbv(0,min = 0, max = 10**N))
 	#step direction. move either up or down towards desired frequency
 	d_state = enum('UP','DOWN')
 	direction	= Signal(d_state.UP) #note that the initial state is UP, as the initial
-	         	                  #frequency (curr_freq_latch) is 0.
+	         	                  #frequency (curr_freq) is 0.
 
 	@always_seq(freq_controller_clk.posedge,reset=reset)
 	def frequency_controller():
@@ -124,14 +130,14 @@ def m_manager(
 		#note that when it inevitably overshoots
 		#the step goes down and compensates for it by 
 		#switching direction.
-		if curr_freq_latch > set_freq_latch:
+		if curr_freq > set_freq_latch:
 			if direction == d_state.UP:
 				if set_step_f_latch >= 1:
 					set_step_f_latch.next = set_step_f_latch - 1
 				direction.next = d_state.DOWN
 			else:
 				direction.next = d_state.DOWN
-		elif curr_freq_latch < set_freq_latch:
+		elif curr_freq < set_freq_latch:
 			if direction == d_state.DOWN:
 				if set_step_f_latch >= 1:
 					set_step_f_latch.next = set_step_f_latch - 1
@@ -146,13 +152,13 @@ def m_manager(
 			state.next     	= t_state.HOLD_FREQ
 
 		if direction == d_state.UP:
-			curr_freq_latch.next	= curr_freq_latch + delta_freq
+			# curr_freq.next	= curr_freq + delta_freq
 			add_o_int.next = 1
 			sub_o_int.next = 0
 			incr_o.next    	= set_step_f_latch
 			dec_clk_en.next	= 1
 		else:
-			curr_freq_latch.next	= curr_freq_latch - delta_freq
+			# curr_freq.next	= curr_freq - delta_freq
 			add_o_int.next = 0
 			sub_o_int.next = 1
 			incr_o.next    	= set_step_f_latch

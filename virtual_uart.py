@@ -5,7 +5,7 @@ from icecua import sim
 from pyprind import ProgBar #just for funsies.
 
 sim_time = 100000000
-sim_time = 10000
+# sim_time = 10000
 
 @block
 def test(clk,hex_freq):
@@ -31,9 +31,11 @@ def test(clk,hex_freq):
 	nothing    	= Signal(intbv(0,min=0,max=int(3.2e9)))
 	sched_index	= Signal(intbv(0,min=0)[8:])
 
+
 	#define rom-manager handshaking signals
 	start, ready, done = [Signal(bool(0)) for x in range(3)]
 	#define manager-dec control signals
+	curr_freq   = Signal(intbv(0,min=0,max=int(3.2e9)))
 	add,sub,dec_clk = [Signal(bool(0)) for x in range(3)]
 	incr = Signal(intbv(0)[N:])
 
@@ -66,6 +68,7 @@ def test(clk,hex_freq):
 			start=start,
 			done=done,
 			clk=clk,
+			bq=curr_freq,
 			add_o=add,
 			sub_o=sub,
 			incr_o=incr,
@@ -80,6 +83,7 @@ def test(clk,hex_freq):
 			add=add,
 			sub=sub,
 			q=hex_freq,
+			bq=curr_freq,
 			incr=incr,
 			reset=None,
 			N=N
