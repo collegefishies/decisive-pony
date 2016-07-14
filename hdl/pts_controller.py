@@ -4,15 +4,17 @@ from icecua.hdl import *
 
 @block
 def pts_controller(hex_freq,pts_enable, amphenol):
+	amphenol_l = [Signal(False) for i in range(50)]
+	amphenol_int = ConcatSignal(*reversed(amphenol_l))
 	@always_comb
 	def wiring():
-		amphenol.next = amphenol_sig
+		amphenol.next = amphenol_int
 		#connect our grounds
 		amphenol_l[49].next = 0  #nc -- wired to ground
 
 		#testled to NC
 		amphenol_l[48].next = 1
-		amphenol_l[44].next = int_clk
+		# amphenol_l[44].next = clk
 
 
 		#connect our signals

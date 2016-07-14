@@ -38,13 +38,13 @@ def m_dec(clk, add,sub, q, bq, incr=Signal(intbv(0,min=0,max=10)),reset=ResetSig
 		to update to_add when any part of to_add changes, as is the case
 		when performing carry logic.
 		'''
-		for digit in range(incr):
-			to_add[digit].next = 0
-
-		to_add[incr].next = 1
-
-		for digit in range(incr+1,N):
-			to_add[digit].next = (q_int_l[digit-1] == 9) and to_add[digit-1]
+		for digit in range(N):
+			if digit < incr:
+				to_add[digit].next = 0
+			elif digit == incr:
+				to_add[incr].next = 1
+			else:
+				to_add[digit].next = (q_int_l[digit-1] == 9) and to_add[digit-1]
 
 	@always(incr,q_int,*to_subtract)
 	def sublogic():
@@ -58,11 +58,13 @@ def m_dec(clk, add,sub, q, bq, incr=Signal(intbv(0,min=0,max=10)),reset=ResetSig
 		to update to_subtract when any part of to_subtract changes, as is the case
 		when performing carry logic.
 		'''
-		for digit in range(incr):
-			to_subtract[digit].next = 0
-		to_subtract[incr].next = 1
-		for digit in range(incr+1,N):
-			to_subtract[digit].next = (q_int_l[digit-1] == 0) and to_subtract[digit-1]
+		for digit in range(N):
+			if digit < incr:
+				to_subtract[digit].next = 0
+			elif digit == incr:
+				to_subtract[incr].next = 1
+			else:
+				to_subtract[digit].next = (q_int_l[digit-1] == 0) and to_subtract[digit-1]
 
 	@always_seq(clk.negedge, reset=reset)
 	def hex_counter():
@@ -76,34 +78,38 @@ def m_dec(clk, add,sub, q, bq, incr=Signal(intbv(0,min=0,max=10)),reset=ResetSig
 		if add == True and (not sub):
 			#work on the hexadecimal
 			#main stuff
-			for digit in range(incr+1,N):
-				if to_add[digit]:
-					if q_int_l[digit] != 9:
-						q_int_l[digit].next = q_int_l[digit] + 1
+			for digit in range(1,N):
+				if digit > incr:
+					if to_add[digit]:
+						if q_int_l[digit] != 9:
+							q_int_l[digit].next = q_int_l[digit] + 1
+						else:
+							q_int_l[digit].next = 0
 					else:
-						q_int_l[digit].next = 0
-				else:
-					q_int_l[digit].next = q_int_l[digit]
-			#edge case
-			if q_int_l[incr] != 9:
-				q_int_l[incr].next = q_int_l[incr] + 1
-			else:
-				q_int_l[incr].next = 0
+						q_int_l[digit].next = q_int_l[digit]
+				elif digit == incr:
+					#edge case
+					if q_int_l[incr] != 9:
+						q_int_l[incr].next = q_int_l[incr] + 1
+					else:
+						q_int_l[incr].next = 0
 		elif sub == True and (not add):
 			#main stuff
-			for digit in range(incr+1,N):
-				if to_subtract[digit]:
-					if q_int_l[digit] != 0:
-						q_int_l[digit].next = q_int_l[digit] - 1
+			for digit in range(1,N):
+				if digit > incr:
+					if to_subtract[digit]:
+						if q_int_l[digit] != 0:
+							q_int_l[digit].next = q_int_l[digit] - 1
+						else:
+							q_int_l[digit].next = 9
 					else:
-						q_int_l[digit].next = 9
-				else:
-					q_int_l[digit].next = q_int_l[digit]
-			#edge case
-			if q_int_l[incr] != 0:
-				q_int_l[incr].next = q_int_l[incr] - 1
-			else:
-				q_int_l[incr].next = 9
+						q_int_l[digit].next = q_int_l[digit]
+				elif digit == incr:
+					#edge case
+					if q_int_l[incr] != 0:
+						q_int_l[incr].next = q_int_l[incr] - 1
+					else:
+						q_int_l[incr].next = 9
 		else:
 			for digit in range(N):
 				q_int_l[digit].next = q_int_l[digit]
