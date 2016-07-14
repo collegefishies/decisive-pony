@@ -2,6 +2,8 @@ from myhdl import *
 from icecua.sim import clkdriver
 from fractions import Fraction
 from math import log10,floor
+from top import top
+from pyprind import ProgBar #just for funsies.
 
 baud_clk = Signal(False)
 fpga_rx = Signal(False)
@@ -9,7 +11,7 @@ freq_old = 0
 freq_new = 0
 time_old = 0
 
-clock_frequency = 12e6
+clock_frequency = int(12e6)
 baud_frequency = 9600
 
 ns = 1e-9
@@ -17,12 +19,13 @@ in_ns = 1./ns
 in_clk_cycles = clock_frequency
 waittime = 8*10*clock_frequency/baud_frequency*in_ns
 
+sim_time = int(400e-3*in_ns)
 @block
 def pc_uart(baud_clk,pc_tx,address,data,when):
 
 	@instance
 	def writebytes():
-		yield delay(when)
+		yield delay(int(when))
 		for i in range(8):
 			yield baud_clk.posedge
 			pc_tx.next = address[i]
@@ -43,6 +46,7 @@ def pc_uart(baud_clk,pc_tx,address,data,when):
 
 @block
 def write_freq(freq,when):
+	global freq_old,freq_new
 	freq_new = freq
 	address = intbv(0)[8:]
 	data = intbv(int(freq),min=0,max=int(3.2e9))
@@ -51,6 +55,7 @@ def write_freq(freq,when):
 
 @block
 def write_time(time,when):
+	global freq_old,freq_new,time_old,time_new
 	fstep_address = intbv(1)
 	tstep_address = intbv(2)
 	
@@ -60,7 +65,7 @@ def write_time(time,when):
 	f_step = f_rate.denominator
 	t_step = f_rate.numerator
 
-	t_step_in_clk_cycles = intbv(t_step*ns*clock_frequency)
+	t_step_in_clk_cycles = intbv(int(t_step*ns*clock_frequency))
 
 	f_step_in_log10 = intbv(int(log10(f_step)))
 
@@ -87,7 +92,7 @@ def trigger_signal(baud_clk,trigger,when):
 
 	@instance
 	def trigger_it():
-		yield delay(when)
+		yield delay(int(when))
 		trigger.next = 1
 		yield baud_clk.posedge
 		trigger.next = 0
@@ -102,9 +107,20 @@ def trigger_signal(baud_clk,trigger,when):
 
 @block
 def testbench():
+	modules = []
+
 	clk = Signal(False)
 	trigger = Signal(False)
 	fpga_tx = Signal(False)
+
+	if __debug__:
+		bar = ProgBar(sim_time,width=40,bar_char='█')
+		@always_seq(clk.posedge,reset=None)
+		def barmonitor():
+			bar.update()
+			if now() % 50000 == 0 and now():
+				print now()
+		modules.append(barmonitor)
 
 	hex_freq = Signal(intbv(0,min=0,max=int(3.2e9)))
 	amphenol = Signal(intbv(0)[50:])
@@ -131,10 +147,12 @@ def testbench():
 	stimulus.append(write_time(time=300e-3,when=100+7*waittime))
 	stimulus.append(write_hold(time=0,when=100+8*waittime))
 
-	return uut,stimulus
+	#trigger
+	stimulus.append(trigger_signal(baud_clk,trigger,when=100+9*waittime))
+	return uut,stimulus,clk_driver,baud_driver,modules
 
 
 tb = testbench()
 
 tb.config_sim(trace=True)
-tb.run(int(400e-3*in_ns))
+tb.run_sim(sim_time)
