@@ -1,7 +1,6 @@
 from myhdl import *
 from icecua.hdl import *
 
-
 @block
 def pts_controller(hex_freq,pts_enable, amphenol):
 	amphenol_l = [Signal(False) for i in range(50)]

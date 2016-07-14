@@ -9,6 +9,7 @@ def m_dec(clk, add,sub, q, bq, incr=Signal(intbv(0,min=0,max=10)),reset=ResetSig
 	add, and sub are clock enables that determine whether we should add
 	or subtract.
 	'''
+
 	#whether or not we need to subtract/add a certain digit
 	to_subtract      	= [Signal(bool(0)) for i in range(N)]
 	# to_subtract_sig	= ConcatSignal(*to_subtract)
@@ -20,6 +21,7 @@ def m_dec(clk, add,sub, q, bq, incr=Signal(intbv(0,min=0,max=10)),reset=ResetSig
 	bq_int = Signal(intbv(0,min=-10**N,max=10**N))
 
 	increment_amounts = tuple([10**i for i in range(N)])
+
 
 	@always_seq(clk.posedge,reset=None)
 	def wiring():
@@ -80,6 +82,7 @@ def m_dec(clk, add,sub, q, bq, incr=Signal(intbv(0,min=0,max=10)),reset=ResetSig
 			#main stuff
 			for digit in range(1,N):
 				if digit > incr:
+
 					if to_add[digit]:
 						if q_int_l[digit] != 9:
 							q_int_l[digit].next = q_int_l[digit] + 1

@@ -65,9 +65,9 @@ def m_manager(
 	dec_clk_int	= Signal(bool(0))
 
 
-	@always(start.posedge)
+	@always_seq(clk.posedge,reset=reset)
 	def latcher():
-		if ready:
+		if ready and start:
 			set_freq_latch.next  	= set_freq
 			set_step_f_latch.next	= set_step_f
 			set_step_t_latch.next	= set_step_t

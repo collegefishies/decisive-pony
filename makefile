@@ -1,6 +1,9 @@
 PYCC=pypy
 CURDIR=$(shell pwd)
 
+tb_top.py:
+	cd ./run/; pwd; $(PYCC) -c 'import decisive_pony.tb_top'
+	gtkwave  --cpu=4 run/testbench.vcd
 
 blinky: blinky.py
 	pypy blinky.py
@@ -21,7 +24,7 @@ virtual_uart.py:
 
 with_uart.py:
 	cd ./run/; pwd; $(PYCC) -c 'import decisive_pony.with_uart'
-	# gtkwave  --cpu=4 run/test.vcd
+	gtkwave  --cpu=4 run/test.vcd
 	# rm run/test.vcd
 
 test_dec:
