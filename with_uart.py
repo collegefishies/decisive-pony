@@ -56,7 +56,8 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	notclock = Signal(bool(1))
 	length_of_signals = len(set_freq)
 	ready = Signal(True)
-	start, done = [Signal(bool(0)) for x in range(2)]
+	start = Signal(False)
+	done  = Signal(False)
 
 	whichram = Signal(intbv(0)[8:])
 	biggestblock_l = [Signal(bool(0)) for i in range(length_of_signals)]
@@ -281,9 +282,13 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			reset=reset,
 			N=N
 		)
+
 	monitor_inst = monitor(hex_freq=hex_freq,freq_output=curr_freq,trigger=trigger,rx=fpga_rx,clk=clk)
 	@always_seq(clk.posedge,reset=reset)
 	def schedule_arbiter():
+		if drdy == 1:
+			done.next = 0
+		
 		if ready == True:
 			start.next = (1 and (not done)) and trigger
 			if sched_index < sched_len - 1:
