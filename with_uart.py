@@ -67,9 +67,11 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			clk=clk, 
 			rx=fpga_rx,
 			tx=fpga_tx,
-			reset=None,
+			reset=reset,
 			rx_data=rx_data,
-			drdy=drdy
+			drdy=drdy,
+			baudrate=9600,
+			freq_in=12e6
 		))
 
 	freq_rambus 	= RamBus(typical=intbv(0,min=0,max=int(3.2e9)),depth=128)
