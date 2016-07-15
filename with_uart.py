@@ -5,8 +5,24 @@ from icecua.interface import RamBus
 from icecua import sim
 from pyprind import ProgBar #just for funsies.
 
-sim_time = 100000000
+# sim_time = 100000000
 # sim_time = 10000
+@block
+def monitor(hex_freq,freq_output,trigger, rx,clk):
+	if __debug__:
+		signal_traces = open('signals.txt','w')
+
+		@always(clk.posedge,clk.negedge)
+		def monitoring():
+			# print "%d %s %d %d %d\n" % (now(), hex(hex_freq.val), freq_output.val, trigger.val, rx.val)
+			signal_traces.write("%d %d %s %d %d %d\n" % (now(), clk, hex(hex_freq.val), freq_output.val, trigger.val, rx.val))
+			signal_traces.flush()
+		return monitoring
+	else:
+		@instance
+		def nop():
+			pass
+		return nop
 
 @block
 def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
@@ -67,13 +83,14 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			clk=clk, 
 			rx=fpga_rx,
 			tx=fpga_tx,
-			reset=reset,
+			reset=None,
 			rx_data=rx_data,
 			drdy=drdy,
 			baudrate=9600,
 			freq_in=12e6
 		))
 
+	#depth actually /defines/ the depth of the bussedrams.
 	freq_rambus 	= RamBus(typical=intbv(0,min=0,max=int(3.2e9)),depth=128)
 	fstep_rambus	= RamBus(typical=intbv(0,min=0,max=int(3.2e9)),depth=128)
 	tstep_rambus	= RamBus(typical=intbv(0,min=0,max=int(3.2e9)),depth=128)
@@ -325,7 +342,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			reset=reset,
 			N=N
 		)
-
+	monitor_inst = monitor(hex_freq=hex_freq,freq_output=curr_freq,trigger=trigger,rx=fpga_rx,clk=clk)
 	@always_seq(clk.posedge,reset=reset)
 	def schedule_arbiter():
 		if ready == True:
@@ -338,6 +355,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			start.next = 0
 
 	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring
+
 clk = Signal(bool(0))
 hex_freq = Signal(intbv(0,min=0,max=int(3.2e9)))
 fpga_rx	= Signal(bool(0))
