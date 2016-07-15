@@ -17,7 +17,7 @@ clock_frequency = int(12e6)
 baud_frequency = 9600
 
 ns = 1e-9
-in_ns = 1./ns
+in_ns = 1./ns/10.
 in_clk_cycles = clock_frequency
 waittime = int(7*14./baud_frequency*in_ns)
 
