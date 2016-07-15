@@ -163,16 +163,15 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	tstep_rambus_addr	= Signal(intbv(0)[8:])
 	hold_rambus_addr 	= Signal(intbv(0)[8:])
 
-	@always_seq(clk.posedge,reset=reset)
+	@always_comb
 	def ramwiring():
 		''' Connect basic signals of the RAMS: data in and data_out and clock'''
 		# biggestblock.next = ConcatSignal(*reversed(biggestblock_l))
 
-		for i in range(32):
-			freq_rambus.din.next 	= biggestblock[32:]
-			fstep_rambus.din.next	= biggestblock[32:]
-			tstep_rambus.din.next	= biggestblock[32:]
-			hold_rambus.din.next 	= biggestblock[32:]
+		freq_rambus.din.next 	= biggestblock[32:]
+		fstep_rambus.din.next	= biggestblock[32:]
+		tstep_rambus.din.next	= biggestblock[32:]
+		hold_rambus.din.next 	= biggestblock[32:]
 
 		set_freq.next 	= freq_rambus.dout 
 		freq_step.next	= fstep_rambus.dout
