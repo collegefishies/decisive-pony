@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from myhdl import *
 from icecua.sim import clkdriver
 from fractions import Fraction
 from math import log10,floor
-from top import top
+from with_uart import with_uart
 from pyprind import ProgBar #just for funsies.
 
 baud_clk = Signal(False)
