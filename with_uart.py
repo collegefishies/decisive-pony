@@ -164,8 +164,8 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			hold_rambus.length,
 			drdy)
 	def determine_sched_len():
-		''' Some nasty combinatorial logic here to determine
-		the schedule length'''
+		''' Combinatorial logic here to determine
+		the schedule length as the smallest amount of data points stuck into the RAMs'''
 		if freq_rambus.length < fstep_rambus.length and freq_rambus.length < tstep_rambus.length and freq_rambus.length < hold_rambus.length:
 			sched_len.next = freq_rambus.length
 		elif tstep_rambus.length < fstep_rambus.length and tstep_rambus.length < freq_rambus.length and tstep_rambus.length < hold_rambus.length:
@@ -182,11 +182,18 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 		into the appropriate latch and then writing to the appropriate 
 		RAM'''
 
-		
+		delayed_reset1 = ResetSignal(0,active=1,async=False)
+		delayed_reset2 = ResetSignal(0,active=1,async=False)
+
+		@always_seq(clk.posedge,reset=None)
+		def reset_delayer():
+			delayed_reset1.next = reset
+			delayed_reset2.next = delayed_reset1
+
 		latch_counter = Signal(intbv(0)[8:])
 
 		drdy_turnedon = Signal(bool(0))
-		drdy_old	 = Signal(bool(0))
+		drdy_old	 = Signal(bool(1))
 
 		@always_seq(clk.posedge,reset=reset)
 		def drdy_monitor():
@@ -201,7 +208,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			else:
 				drdy_turnedon.next = 0
 
-		@always_seq(clk.posedge,reset=reset)
+		@always_seq(clk.posedge,reset=delayed_reset2)
 		def fsm():
 			''' This fsm latches (just after) the dataready positive edge
 			signal. The data is guaranteed to be ready then.'''
@@ -252,7 +259,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			else:
 				reset.next = 0
 
-		return fsm,drdy_monitor
+		return fsm,drdy_monitor,reset_delayer
 
 	manager = m_manager(
 			set_freq=set_freq,
