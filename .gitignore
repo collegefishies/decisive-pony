@@ -2,5 +2,4 @@
 **/**.pyc
 rtl**/
 experimental/
-**/**.vcd
-**/**.vcd.**
+run/
