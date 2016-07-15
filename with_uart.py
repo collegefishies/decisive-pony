@@ -82,7 +82,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			clk=clk, 
 			rx=fpga_rx,
 			tx=fpga_tx,
-			reset=None,
+			reset=reset,
 			rx_data=rx_data,
 			drdy=drdy,
 			baudrate=9600,
@@ -141,16 +141,15 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 		tstep_rambus.clk.next	= notclock
 		hold_rambus.clk.next 	= notclock
 
-		if state == t_state.READWHICHRAM:
-			freq_rambus.addr.next 	= sched_index
-			fstep_rambus.addr.next	= sched_index
-			tstep_rambus.addr.next	= sched_index
-			hold_rambus.addr.next 	= sched_index
-		else:
-			freq_rambus.addr.next 	=	freq_rambus_addr 
-			fstep_rambus.addr.next	=	fstep_rambus_addr
-			tstep_rambus.addr.next	=	tstep_rambus_addr
-			hold_rambus.addr.next 	=	hold_rambus_addr 
+		freq_rambus.raddr.next 	= sched_index
+		fstep_rambus.raddr.next	= sched_index
+		tstep_rambus.raddr.next	= sched_index
+		hold_rambus.raddr.next 	= sched_index
+
+		freq_rambus.waddr.next 	=	freq_rambus_addr 
+		fstep_rambus.waddr.next	=	fstep_rambus_addr
+		tstep_rambus.waddr.next	=	tstep_rambus_addr
+		hold_rambus.waddr.next 	=	hold_rambus_addr 
 
 
 
