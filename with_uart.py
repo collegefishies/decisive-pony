@@ -112,47 +112,6 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			rambus=hold_rambus
 		))
 
-	# modules.append(ram(
-	#		clk=freq_rambus.clk,
-	#		din=freq_rambus.din,
-	#		dout=freq_rambus.dout,
-	#		addr=freq_rambus.addr,
-	#		we=freq_rambus.we,
-	#		width=freq_rambus.width,
-	#		depth=freq_rambus.width
-	#	))
-
-	# modules.append(ram(
-	#		clk=fstep_rambus.clk,
-	#		din=fstep_rambus.din,
-	#		dout=fstep_rambus.dout,
-	#		addr=fstep_rambus.addr,
-	#		we=fstep_rambus.we,
-	#		width=fstep_rambus.width,
-	#		depth=fstep_rambus.width
-	#	))
-
-	# modules.append(ram(
-	#		clk=tstep_rambus.clk,
-	#		din=tstep_rambus.din,
-	#		dout=tstep_rambus.dout,
-	#		addr=tstep_rambus.addr,
-	#		we=tstep_rambus.we,
-	#		width=tstep_rambus.width,
-	#		depth=tstep_rambus.width
-	#	))
-
-	# modules.append(ram(
-	#		clk=hold_rambus.clk,
-	#		din=hold_rambus.din,
-	#		dout=hold_rambus.dout,
-	#		addr=hold_rambus.addr,
-	#		we=hold_rambus.we,
-	#		width=hold_rambus.width,
-	#		depth=hold_rambus.width
-	#	))
-
-
 	@always_comb
 	def clockinverter():
 		''' Just connect the notclock signal for passing into the RAMs  '''
@@ -294,27 +253,6 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 				reset.next = 0
 
 		return fsm,drdy_monitor
-
-	# freq_rom = rom(
-	#	dout=set_freq, 
-	#	addr=sched_index,
-	#	CONTENT=tuple((int(x) for x in (1e6, 14e6,12e6,2e6)))
-	#	)
-	# tstep_rom = rom(
-	#	dout=time_step, 
-	#	addr=sched_index,
-	#	CONTENT=tuple((int(x) for x in (14,1,2,1)))
-	#	)
-	# fstep_rom = rom(
-	#	dout=freq_step, 
-	#	addr=sched_index,
-	#	CONTENT=tuple((int(x) for x in (4,3,2,1)))
-	#	)
-	# holdt_rom = rom(
-	#	dout=hold_time,
-	#	addr=sched_index,
-	#	CONTENT=tuple((int(x) for x in (1e5,20e5,10e5,1e5)))
-	#	)
 
 	manager = m_manager(
 			set_freq=set_freq,
