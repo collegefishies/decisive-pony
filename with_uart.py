@@ -55,7 +55,9 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	#define rom-manager handshaking signals
 	notclock = Signal(bool(1))
 	length_of_signals = len(set_freq)
-	start, ready, done = [Signal(bool(0)) for x in range(3)]
+	ready = Signal(True)
+	start, done = [Signal(bool(0)) for x in range(2)]
+
 	whichram = Signal(intbv(0)[8:])
 	biggestblock_l = [Signal(bool(0)) for i in range(length_of_signals)]
 	biggestblock = ConcatSignal(*reversed(biggestblock_l))
