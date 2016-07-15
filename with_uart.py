@@ -8,7 +8,7 @@ from pyprind import ProgBar #just for funsies.
 # sim_time = 100000000
 # sim_time = 10000
 @block
-def monitor(hex_freq,freq_output,trigger, rx,clk):
+def monitor(hex_freq,freq_output,trigger, rx,clk,reset=None):
 	if __debug__:
 		signal_traces = open('signals.txt','w')
 
@@ -69,8 +69,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	t_state = enum(
 				'READWHICHRAM',
 				'PARSEFORRAM',
-				'SENDTORAM',
-				'RESET'
+				'SENDTORAM'
 			)
 
 	state = Signal(t_state.READWHICHRAM)
@@ -218,10 +217,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 				tstep_rambus.we.next	= 0
 				hold_rambus.we.next 	= 0
 				whichram.next = rx_data
-				if rx_data != 255:
-					state.next = t_state.PARSEFORRAM
-				else:
-					state.next = t_state.RESET
+				state.next = t_state.PARSEFORRAM
 			elif state == t_state.PARSEFORRAM and drdy_turnedon:
 				latch_counter.next = latch_counter + 1
 				for i in range(8):
@@ -252,13 +248,8 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 					tstep_rambus.we.next	= 0
 					hold_rambus.we.next 	= 0
 				state.next = t_state.READWHICHRAM
-			elif state == t_state.RESET: 
-				# state == t_state.RESET
-				latch_counter.next = 0
-				reset.next = 1
 			else:
-				reset.next = 0
-
+				pass
 		return fsm,drdy_monitor,reset_delayer
 
 	manager = m_manager(
