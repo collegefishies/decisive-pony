@@ -22,6 +22,7 @@ in_clk_cycles = clock_frequency
 waittime = int(7*14./baud_frequency*in_ns)
 
 sim_time = int(400e-3*in_ns)
+
 @block
 def pc_uart(baud_clk,pc_tx,address,data,when=0):
 
@@ -63,23 +64,34 @@ def write_freq(freq,when):
 @block
 def write_time(time,when):
 	global freq_old,freq_new,time_old,time_new
-	fstep_address = intbv(1)
-	tstep_address = intbv(2)
+	fstep_address = intbv(1)[8:]
+	tstep_address = intbv(2)[8:]
 	
-	rate = (freq_new - freq_old)/((time - time_old)*in_ns)
+	rate = ((freq_new - freq_old)/10.)/((time - time_old)*in_ns)
 
-	f_rate = Fraction(1/rate).limit_denominator(1000)
+	f_rate = Fraction(1./rate).limit_denominator(1000)
 	f_step = f_rate.denominator
 	t_step = f_rate.numerator
 
+	print "f_step is: %d DHz" % f_step
+	print "t_step is: %d ns" % t_step
+
 	t_step_in_clk_cycles = intbv(int(t_step*ns*clock_frequency))[32:]
 
-	f_step_in_log10 = intbv(int(log10(f_step)))[32:]
+	f_step_in_log10 = intbv(
+		min(3,
+			max(
+				0,
+				int(log10(f_step))
+				)
+		)
+		)[32:]
 
+	print "t_step in clock cycles is: %d" % t_step_in_clk_cycles
+	print "log10(f_step) is: %d" % f_step_in_log10
 	time_old = time
 	freq_old = freq_new
 
-	waittime = 8*10*clock_frequency/baud_frequency*in_ns
 	stimulus = []
 	stimulus.append(pc_uart(baud_clk,fpga_rx,fstep_address,data=f_step_in_log10,when=when))
 	stimulus.append(pc_uart(baud_clk,fpga_rx,tstep_address,data=t_step_in_clk_cycles,when=(when+waittime)))
@@ -88,9 +100,9 @@ def write_time(time,when):
 
 @block 
 def write_hold(time,when):
-	hold_address = intbv(3)
+	hold_address = intbv(3)[8:]
 
-	data = intbv(time*in_clk_cycles)[8:]
+	data = intbv(int(time*in_clk_cycles))[32:]
 
 	return pc_uart(baud_clk,fpga_rx,address=hold_address,data=data,when=when)
 
@@ -150,29 +162,30 @@ def testbench():
 	print "Sim_time is %15d" % sim_time
 	@always(baud_clk.posedge)
 	def monitor_baud():
-		print "%20d" % now()
+		# print "%20d" % now()
+		pass
 	modules.append(monitor_baud)
 
 	stimulus = []
 
 	#write first schedule point
 	# stimulus.append(reset(int(2./baud_frequency*in_ns)))
-	stimulus.append(write_freq(freq=25.4e6,when=100+2*waittime))
-	stimulus.append(write_time(time=1e-6,when=100+waittime+2*waittime))
-	stimulus.append(write_hold(time=0,when=100+2*waittime+2*waittime))
+	stimulus.append(write_freq(freq=25.4e6,when=100+waittime))
+	stimulus.append(write_time(time=1e-6,when=100+waittime+waittime))
+	stimulus.append(write_hold(time=0,when=100+3*waittime+waittime))
 
 	#write second schedule point
-	stimulus.append(write_freq(freq=27.7e6,when=100+3*waittime+2*waittime))
-	stimulus.append(write_time(time=100e-3,when=100+4*waittime+2*waittime))
-	stimulus.append(write_hold(time=0,when=100+5*waittime+2*waittime))
+	stimulus.append(write_freq(freq=27.7e6,when=100+4*waittime+waittime))
+	stimulus.append(write_time(time=100e-3,when=100+5*waittime+waittime))
+	stimulus.append(write_hold(time=0,when=100+7*waittime+waittime))
 	
 	#write third schedule point
-	stimulus.append(write_freq(freq=28.4e6,when=100+6*waittime+2*waittime))
-	stimulus.append(write_time(time=300e-3,when=100+7*waittime+2*waittime))
-	stimulus.append(write_hold(time=0,when=100+8*waittime+2*waittime))
+	stimulus.append(write_freq(freq=28.4e6,when=100+8*waittime+waittime))
+	stimulus.append(write_time(time=300e-3,when=100+9*waittime+waittime))
+	stimulus.append(write_hold(time=0,when=100+11*waittime+waittime))
 
 	#trigger
-	stimulus.append(trigger_signal(baud_clk,trigger,when=100+9*waittime+2*waittime))
+	stimulus.append(trigger_signal(baud_clk,trigger,when=100+12*waittime+waittime))
 	return uut,stimulus,clk_driver,baud_driver,modules
 
 
