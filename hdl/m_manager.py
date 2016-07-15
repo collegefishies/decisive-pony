@@ -62,8 +62,10 @@ def m_manager(
 	#define the signals the frequency reacher will toggle
 	add_o_int  	= Signal(bool(0))
 	sub_o_int  	= Signal(bool(0))
-	dec_clk_int	= Signal(bool(0))
 
+
+	start_time = Signal(False)
+	t_step_clk 			= Signal(bool(0))
 
 	@always_seq(clk.posedge,reset=reset)
 	def latcher():
@@ -72,13 +74,33 @@ def m_manager(
 			set_step_f_latch.next	= set_step_f
 			set_step_t_latch.next	= set_step_t
 			set_wait_latch.next  	= set_wait
+			start_time.next 		= 1
+
+	half_period = Signal(intbv(0,min=0,max=10**N))
+
+	@always_seq(start_time.posedge,reset=reset)
+	def define_t_step_clk():
+		if set_step_t_latch == 0:
+			half_period.next = 0
+		else:
+			half_period.next = set_step_t_latch//2
+
+	t_step_counter = Signal(intbv(0,min=0,max=10**N))
+	@always_seq(clk.posedge,reset=reset)
+	def t_step_clk_driver():
+		if t_step_counter < half_period:
+			t_step_counter.next = t_step_counter + 1
+		else:
+			t_step_clk.next = not t_step_clk
+			t_step_counter.next = 0
+
 
 	quitold = Signal(bool(0))
 	start_holdingold = Signal(bool(0))
 	@always_seq(clk.posedge,reset=reset)
 	def quit_monitor():
 		quitold.next = quit
-		start_holdingold.next = start_holdingold
+		start_holdingold.next = start_holding
 
 		if quitold == 0 and quit == 1:
 			quit_turnedon.next = 1
@@ -90,21 +112,23 @@ def m_manager(
 		else:
 			start_holding_turnedon.next = 0
 
-	@always(state,clk,start,quit_turnedon,dec_clk_int,add_o_int,sub_o_int,start_holding_turnedon)
+	@always_seq(clk.posedge,reset=reset)
 	def fsm():
 		''' Our beloved finite state machine! For controlling the frequency stepping of the PTS.
 		It drives m_dec, which is a special counter that has both a binary output, and hexadecimal
 		output (which is what the PTS needs. It steps through the frequency schedule.'''
-		if state == t_state.WAIT and start == 1:
+
+		if state == t_state.WAIT:
 			dec_clk.next                	= 0
 			add_o.next                  	= 0
 			sub_o.next                  	= 0
 			frequency_controller_en.next	= False
 			waiter_en.next              	= False 
 			ready.next                  	= True
-			state.next = t_state.REACH_DESIRED
+			if start == True:
+				state.next = t_state.REACH_DESIRED
 		elif state == t_state.REACH_DESIRED and not quit_turnedon:
-			dec_clk.next                	= dec_clk_int 
+			dec_clk.next                	= t_step_clk
 			add_o.next                  	= add_o_int
 			sub_o.next                  	= sub_o_int
 			frequency_controller_en.next	= True
@@ -113,14 +137,6 @@ def m_manager(
 		elif state == t_state.REACH_DESIRED and quit_turnedon:
 			state.next = t_state.HOLD_FREQ
 			#let frequency_controller do its thing
-		# elif state == t_state.REACH_DESIRED_CHANGE_STEP:
-		#	dec_clk.next                	= dec_clk_int
-		#	add_o.next                  	= add_o_int
-		#	sub_o.next                  	= sub_o_int
-		#	frequency_controller_en.next	= True
-		#	waiter_en.next              	= False
-		#	ready.next                  	= False
-		 	#let frequency_controller do its thing
 		else: #state == t_state.HOLD_FREQ:
 			if start_holding_turnedon:
 				state.next = t_state.WAIT
@@ -136,14 +152,15 @@ def m_manager(
 	freq_controller_clk	= Signal(bool(0))
 	waiter_clk         	= Signal(bool(0))
 	dec_clk_en         	= Signal(bool(0))
-
 	@always_comb
 	def wiring():
-		freq_controller_clk.next	= frequency_controller_en and clk
+		freq_controller_clk.next	= frequency_controller_en and t_step_clk
+		dec_clk.next				= dec_clk_en and t_step_clk
 		waiter_clk.next         	= waiter_en	and clk
-		dec_clk_int.next        	= dec_clk_en and clk
 		curr_freq.next          	= bq
 
+
+			
 	delta_freq	= Signal(intbv(0,min = 0, max = 10**N))
 	#step direction. move either up or down towards desired frequency
 	d_state = enum('UP','DOWN')
@@ -206,4 +223,4 @@ def m_manager(
 			start_holding.next = 0
 			set_wait_latch_int.next = set_wait_latch_int - 1
  
-	return latcher, fsm, frequency_controller, holder, wiring, quit_monitor
+	return latcher, fsm, frequency_controller, holder, wiring, quit_monitor, define_t_step_clk, t_step_clk_driver
