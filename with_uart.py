@@ -91,10 +91,10 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 		))
 
 	#depth actually /defines/ the depth of the bussedrams.
-	freq_rambus 	= RamBus(typical=intbv(0,min=0,max=int(3.2e9)),depth=128)
-	fstep_rambus	= RamBus(typical=intbv(0,min=0,max=int(3.2e9)),depth=128)
-	tstep_rambus	= RamBus(typical=intbv(0,min=0,max=int(3.2e9)),depth=128)
-	hold_rambus 	= RamBus(typical=intbv(0,min=0,max=int(3.2e9)),depth=128)
+	freq_rambus 	= RamBus(typical=intbv(0)[32:],depth=128)
+	fstep_rambus	= RamBus(typical=intbv(0)[32:],depth=128)
+	tstep_rambus	= RamBus(typical=intbv(0)[32:],depth=128)
+	hold_rambus 	= RamBus(typical=intbv(0)[32:],depth=128)
 
 	modules.append(bussedram(
 			rambus=freq_rambus
@@ -287,9 +287,12 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 					tstep_rambus.we.next	= 0
 					hold_rambus.we.next 	= 0
 				state.next = t_state.READWHICHRAM
-			else: 
+			elif state == t_state.RESET: 
 				# state == t_state.RESET
+				latch_counter.next = 0
 				reset.next = 1
+			else:
+				reset.next = 0
 
 		return fsm,drdy_monitor
 
