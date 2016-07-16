@@ -5,24 +5,6 @@ from icecua.interface import RamBus
 from icecua import sim
 from pyprind import ProgBar #just for funsies.
 
-# sim_time = 100000000
-# sim_time = 10000
-@block
-def monitor(hex_freq,freq_output,trigger, rx,clk,reset=None):
-	if __debug__:
-		signal_traces = open('signals.txt','w')
-
-		@always(clk.posedge,clk.negedge)
-		def monitoring():
-			# print "%d %s %d %d %d\n" % (now(), hex(hex_freq.val), freq_output.val, trigger.val, rx.val)
-			signal_traces.write("%d %d %s %d %d %d\n" % (now(), clk, hex(hex_freq.val), freq_output.val, trigger.val, rx.val))
-			signal_traces.flush()
-		return monitoring
-	else:
-		@instance
-		def nop():
-			pass
-		return nop
 
 @block
 def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
@@ -58,6 +40,26 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	ready = Signal(True)
 	start = Signal(False)
 	done  = Signal(False)
+	trigger_enable = Signal(False)
+
+	@always_seq(trigger.posedge,reset=reset)
+	def trigger_finger():
+		start.next = 1 and trigger_enable
+		sched_index.next = 0
+
+	@always_seq(clk.posedge,reset=reset)
+	def schedule_arbiter():
+		if drdy == 1:
+			done.next = 0
+		
+		if ready == True:
+			start.next = (1 and (not done)) and trigger
+			if sched_index < sched_len - 1:
+				sched_index.next = sched_index + 1
+			else:
+				done.next = 1
+		else:
+			start.next = 0
 
 	whichram = Signal(intbv(0)[8:])
 	biggestblock_l = [Signal(bool(0)) for i in range(length_of_signals)]
@@ -282,21 +284,6 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			reset=reset,
 			N=N
 		)
-
-	monitor_inst = monitor(hex_freq=hex_freq,freq_output=curr_freq,trigger=trigger,rx=fpga_rx,clk=clk)
-	@always_seq(clk.posedge,reset=reset)
-	def schedule_arbiter():
-		if drdy == 1:
-			done.next = 0
-		
-		if ready == True:
-			start.next = (1 and (not done)) and trigger
-			if sched_index < sched_len - 1:
-				sched_index.next = sched_index + 1
-			else:
-				done.next = 1
-		else:
-			start.next = 0
 
 	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring
 
