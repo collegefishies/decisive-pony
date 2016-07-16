@@ -21,7 +21,7 @@ in_ns = 1./ns/10.
 in_clk_cycles = clock_frequency
 waittime = int(7*14./baud_frequency*in_ns)
 
-sim_time = int(400e-3*in_ns)
+sim_time = int(20*waittime)
 
 @block
 def pc_uart(baud_clk,pc_tx,address,data,when=0):
@@ -186,6 +186,10 @@ def testbench():
 
 	#trigger
 	stimulus.append(trigger_signal(baud_clk,trigger,when=100+12*waittime+waittime))
+	stimulus.append(trigger_signal(baud_clk,trigger,when=100+13*waittime+waittime))
+	stimulus.append(trigger_signal(baud_clk,trigger,when=100+14*waittime+waittime))
+	stimulus.append(trigger_signal(baud_clk,trigger,when=100+15*waittime+waittime))
+	stimulus.append(trigger_signal(baud_clk,trigger,when=100+16*waittime+waittime))
 	return uut,stimulus,clk_driver,baud_driver,modules
 
 
