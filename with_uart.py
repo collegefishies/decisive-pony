@@ -32,7 +32,6 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	start = Signal(False)
 	done  = Signal(False)
 	all_data_received = Signal(False)
-	masked_trigger = Signal(False)
 	trigger_reset = ResetSignal(0,active=1,async=True)
 
 	@always_seq(ready.posedge,reset=trigger_reset)
@@ -45,8 +44,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 
 	@always_comb
 	def trigger_finger():
-		masked_trigger.next = trigger and all_data_received
-		trigger_reset.next = masked_trigger
+		trigger_reset.next = trigger and all_data_received
 
 	@always_comb
 	def when_done():
