@@ -1,5 +1,5 @@
 from myhdl import *
-from hdl import m_manager, m_dec
+from hdl import m_manager, m_dec, pts_controller
 from icecua.hdl import rom, bussedram, ram, uart
 from icecua.interface import RamBus
 from icecua import sim
@@ -7,7 +7,7 @@ from pyprind import ProgBar #just for funsies.
 
 
 @block
-def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger,led2):
+def with_uart(clk,hex_freq,amphenol,fpga_rx,fpga_tx,trigger,led2):
 	N=9
 	sched_len = Signal(intbv(0,min=0,max=128))
 
@@ -286,21 +286,27 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger,led2):
 			N=N
 		)
 
+	pts_connections = pts_controller(
+			hex_freq,
+			pts_enable=Signal(True),
+			amphenol=amphenol
+		)
 	@always_comb
 	def led_wiring():
-		led2(8).next = all_data_received
+		led2[8].next = all_data_received
 		for i in range(8):
-			led2(i).next = whichram[i]
+			led2[i].next = whichram[i]
 
-	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring,when_done,trigger_finger,led_wiring
+	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring,when_done,trigger_finger,led_wiring,pts_connections
 
 clk = Signal(bool(0))
 hex_freq = Signal(intbv(0,min=0,max=int(3.2e9)))
+amphenol = Signal(intbv(0))[50:]
 fpga_rx	= Signal(bool(0))
 fpga_tx	= Signal(bool(0))
 trigger = Signal(bool(0))
 led2 = Signal(intbv(0)[9:])
-inst = with_uart(clk,hex_freq,fpga_rx=fpga_rx,fpga_tx=fpga_tx,trigger=trigger,led2=led2)
+inst = with_uart(clk=clk,amphenol=amphenol,hex_freq=hex_freq,fpga_rx=fpga_rx,fpga_tx=fpga_tx,trigger=trigger,led2=led2)
 inst.convert()
 # inst.config_sim(trace=True)
 # inst.run_sim(sim_time)
