@@ -144,6 +144,7 @@ def testbench():
 	global fpga_rx
 	modules = []
 
+	led2= Signal(intbv(0)[9:])
 	clk = Signal(False)
 	trigger = Signal(False)
 	fpga_tx = Signal(True)
@@ -160,7 +161,7 @@ def testbench():
 	hex_freq = Signal(intbv(0,min=0,max=int(3.2e9)))
 	amphenol = Signal(intbv(0)[50:])
 
-	uut = with_uart(clk,trigger,fpga_rx,fpga_tx,amphenol)
+	uut = with_uart(clk,trigger,fpga_rx,fpga_tx,amphenol,led2)
 
 	clk_driver = clkdriver(clk=clk,period=(1./clock_frequency)*in_ns)
 	baud_driver = clkdriver(clk=baud_clk,period=(1./baud_frequency)*in_ns)
