@@ -1,0 +1,91 @@
+[timestart] 0
+[size] 1920 1058
+[pos] -1 -1
+*-23.939184 25810000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[treeopen] testbench.with_uart_2.
+[treeopen] testbench.with_uart_2.bussedram_5.
+[treeopen] testbench.with_uart_2.bussedram_6.
+[treeopen] testbench.with_uart_2.bussedram_7.
+[treeopen] testbench.with_uart_2.bussedram_8.
+@28
+testbench.with_uart_2.comms_arbiter_1.state
+testbench.with_uart_2.comms_arbiter_1.reset
+@200
+-
+@28
+testbench.baud_clk
+testbench.with_uart_2.comms_arbiter_1.drdy_turnedon
+testbench.with_uart_2.comms_arbiter_1.drdy
+testbench.with_uart_2.comms_arbiter_1.fpga_rx
+@200
+-
+@22
+testbench.with_uart_2.comms_arbiter_1.rx_data[7:0]
+testbench.with_uart_2.biggestblock[31:0]
+@24
+testbench.with_uart_2.whichram[7:0]
+@200
+-
+-Freq_RAM
+@24
+testbench.with_uart_2.bussedram_5.rambus_din[31:0]
+testbench.with_uart_2.bussedram_5.mem.mem(0)[31:0]
+@22
+testbench.with_uart_2.bussedram_5.mem.mem(1)[31:0]
+testbench.with_uart_2.bussedram_5.mem.mem(2)[31:0]
+testbench.with_uart_2.bussedram_5.mem.mem(3)[31:0]
+testbench.with_uart_2.bussedram_5.mem.mem(4)[31:0]
+testbench.with_uart_2.bussedram_5.mem.mem(5)[31:0]
+@28
+testbench.with_uart_2.bussedram_5.rambus_we
+@200
+-
+-fstep_ram
+@22
+testbench.with_uart_2.bussedram_6.rambus_din[31:0]
+testbench.with_uart_2.bussedram_6.mem.mem(0)[31:0]
+testbench.with_uart_2.bussedram_6.mem.mem(1)[31:0]
+testbench.with_uart_2.bussedram_6.mem.mem(2)[31:0]
+testbench.with_uart_2.bussedram_6.mem.mem(3)[31:0]
+testbench.with_uart_2.bussedram_6.mem.mem(4)[31:0]
+testbench.with_uart_2.bussedram_6.mem.mem(5)[31:0]
+@28
+testbench.with_uart_2.bussedram_6.rambus_we
+@200
+-
+-tstep_ram
+@22
+testbench.with_uart_2.bussedram_7.rambus_din[31:0]
+testbench.with_uart_2.bussedram_7.mem.mem(0)[31:0]
+testbench.with_uart_2.bussedram_7.mem.mem(1)[31:0]
+testbench.with_uart_2.bussedram_7.mem.mem(2)[31:0]
+testbench.with_uart_2.bussedram_7.mem.mem(3)[31:0]
+@23
+testbench.with_uart_2.bussedram_7.mem.mem(4)[31:0]
+@22
+testbench.with_uart_2.bussedram_7.mem.mem(5)[31:0]
+@28
+testbench.with_uart_2.bussedram_7.rambus_we
+@200
+-
+-hold_t
+@24
+testbench.with_uart_2.bussedram_8.rambus_din[31:0]
+@22
+testbench.with_uart_2.bussedram_8.mem.mem(0)[31:0]
+testbench.with_uart_2.bussedram_8.mem.mem(1)[31:0]
+testbench.with_uart_2.bussedram_8.mem.mem(2)[31:0]
+testbench.with_uart_2.bussedram_8.mem.mem(3)[31:0]
+testbench.with_uart_2.bussedram_8.mem.mem(4)[31:0]
+testbench.with_uart_2.bussedram_8.mem.mem(5)[31:0]
+@28
+testbench.with_uart_2.bussedram_8.rambus_we
+@22
+testbench.with_uart_2.sched_index[7:0]
+testbench.with_uart_2.freq_rambus_addr[7:0]
+testbench.hex_freq[31:0]
+@28
+testbench.trigger
+[pattern_trace] 1
+[pattern_trace] 0
