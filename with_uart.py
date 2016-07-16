@@ -33,16 +33,30 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	done  = Signal(False)
 	all_data_received = Signal(False)
 	masked_trigger = Signal(False)
+	trigger_reset = ResetSignal(0,active=1,async=True)
+
+	@always_seq(ready.posedge,reset=trigger_reset)
+	def schedule_arbiter():
+		if all_data_received and not done:
+			start.next = 1
+			sched_index.next = sched_index + 1
+		else:
+			start.next = 0
 
 	@always_seq(clk.posedge,reset=reset)
 	def trigger_finger():
 		masked_trigger.next = trigger and all_data_received
 
-	@always_seq(clk.posedge,reset=reset)
-	def schedule_arbiter():
-		if masked_trigger.next == 1:
-			start.next = 1
-		elif start.next == 1:
+	@always_comb
+	def when_done():
+		trigger_reset.next = masked_trigger
+		if (sched_len == sched_index) and all_data_received:
+			done.next = 1
+		else:
+			done.next = 0
+
+	modules.append(when_done)
+	modules.append(trigger_finger)
 
 
 	whichram = Signal(intbv(0)[8:])
@@ -230,7 +244,11 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 					hold_rambus_addr.next = hold_rambus_addr + 1
 					all_data_received.next = 0
 				elif whichram == 22:
-					all_data_received.next = 1
+					freq_rambus.we.next 	= 0
+					fstep_rambus.we.next	= 0
+					tstep_rambus.we.next	= 0
+					hold_rambus.we.next 	= 0
+					all_data_received.next  = 1
 				else:
 					freq_rambus.we.next 	= 0
 					fstep_rambus.we.next	= 0
@@ -238,7 +256,10 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 					hold_rambus.we.next 	= 0
 				state.next = t_state.READWHICHRAM
 			else:
-				pass
+				freq_rambus.we.next 	= 0
+				fstep_rambus.we.next	= 0
+				tstep_rambus.we.next	= 0
+				hold_rambus.we.next 	= 0
 		return fsm,drdy_monitor,reset_delayer
 
 	manager = m_manager(
@@ -255,7 +276,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			incr_o=incr,
 			dec_clk=dec_clk,
 			ready=ready,
-			reset=reset,
+			reset=trigger_reset,
 			N=N
 		)
 
