@@ -1,6 +1,7 @@
 #for PYCC if you can get it pypy is significantly faster,
 #otherwise python
-PYCC=python
+PYCC=pypy
+
 CURDIR=$(shell pwd)
 
 tb_top.py:
