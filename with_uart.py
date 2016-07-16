@@ -12,15 +12,6 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	sched_len = Signal(intbv(0,min=0,max=128))
 
 	modules = []
-	# if __debug__:
-	#	period = 10
-	#	bar = ProgBar(sim_time/period,width=40,bar_char='X')
-	#	modules.append(sim.clkdriver(clk,period))
-	#	@always_seq(clk.posedge,reset=None)
-	#	def barmonitor():
-	#		bar.update()
-	#	modules.append(barmonitor)
-
 
 	#define the schedule
 	#note that all these variables are the same length
@@ -40,26 +31,19 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	ready = Signal(True)
 	start = Signal(False)
 	done  = Signal(False)
-	trigger_enable = Signal(False)
+	all_data_received = Signal(False)
+	masked_trigger = Signal(False)
 
-	@always_seq(trigger.posedge,reset=reset)
+	@always_seq(clk.posedge,reset=reset)
 	def trigger_finger():
-		start.next = 1 and trigger_enable
-		sched_index.next = 0
+		masked_trigger.next = trigger and all_data_received
 
 	@always_seq(clk.posedge,reset=reset)
 	def schedule_arbiter():
-		if drdy == 1:
-			done.next = 0
-		
-		if ready == True:
-			start.next = (1 and (not done)) and trigger
-			if sched_index < sched_len - 1:
-				sched_index.next = sched_index + 1
-			else:
-				done.next = 1
-		else:
-			start.next = 0
+		if masked_trigger.next == 1:
+			start.next = 1
+		elif start.next == 1:
+
 
 	whichram = Signal(intbv(0)[8:])
 	biggestblock_l = [Signal(bool(0)) for i in range(length_of_signals)]
@@ -160,20 +144,15 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 
 
 
-	@always(
-			freq_rambus.length,
-			fstep_rambus.length, 
-			tstep_rambus.length, 
-			hold_rambus.length,
-			drdy)
+	@always_comb
 	def determine_sched_len():
 		''' Combinatorial logic here to determine
 		the schedule length as the smallest amount of data points stuck into the RAMs'''
-		if freq_rambus.length < fstep_rambus.length and freq_rambus.length < tstep_rambus.length and freq_rambus.length < hold_rambus.length:
+		if (freq_rambus.length < fstep_rambus.length) and (freq_rambus.length < tstep_rambus.length) and (freq_rambus.length < hold_rambus.length):
 			sched_len.next = freq_rambus.length
-		elif tstep_rambus.length < fstep_rambus.length and tstep_rambus.length < freq_rambus.length and tstep_rambus.length < hold_rambus.length:
+		elif (tstep_rambus.length < fstep_rambus.length) and (tstep_rambus.length < freq_rambus.length) and (tstep_rambus.length < hold_rambus.length):
 			sched_len.next = tstep_rambus.length
-		elif hold_rambus.length < fstep_rambus.length and hold_rambus.length < freq_rambus.length and hold_rambus.length < tstep_rambus.length:
+		elif (hold_rambus.length < fstep_rambus.length) and (hold_rambus.length < freq_rambus.length) and (hold_rambus.length < tstep_rambus.length):
 			sched_len.next = hold_rambus.length
 		else:
 			sched_len.next = fstep_rambus.length
@@ -234,18 +213,24 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 					freq_rambus.we.next = 1
 					freq_rambus.length.next =  freq_rambus.length + 1
 					freq_rambus_addr.next = freq_rambus_addr + 1
+					all_data_received.next = 0
 				elif whichram == 1:
 					fstep_rambus.we.next = 1
 					fstep_rambus.length.next = fstep_rambus.length.next+ 1
 					fstep_rambus_addr.next = fstep_rambus_addr + 1
+					all_data_received.next = 0
 				elif whichram == 2:
 					tstep_rambus.we.next = 1
 					tstep_rambus.length.next = tstep_rambus.length + 1
 					tstep_rambus_addr.next = tstep_rambus_addr + 1
+					all_data_received.next = 0
 				elif whichram == 3:
 					hold_rambus.we.next = 1
 					hold_rambus.length.next = hold_rambus.length + 1
 					hold_rambus_addr.next = hold_rambus_addr + 1
+					all_data_received.next = 0
+				elif whichram == 22:
+					all_data_received.next = 1
 				else:
 					freq_rambus.we.next 	= 0
 					fstep_rambus.we.next	= 0
