@@ -141,7 +141,7 @@ def m_manager(
 			if start_holding_turnedon:
 				state.next = t_state.WAIT
 
-			dec_clk.next                	= 0
+			# dec_clk.next              	= 0
 			add_o.next                  	= 0
 			sub_o.next                  	= 0
 			frequency_controller_en.next	= False
