@@ -307,11 +307,11 @@ def with_uart(clk,amphenol,fpga_rx,fpga_tx,trigger,led2,reset):
 
 	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring,when_done,trigger_finger,led_wiring,pts_connections
 
-reset = ResetSignal(0,active=1,async=False)
+reset = ResetSignal(1,active=0,async=False)
 clk = Signal(bool(0))
 amphenol = Signal(intbv(0)[50:])
 fpga_rx	= Signal(bool(0))
-fpga_tx	= Signal(bool(0))
+fpga_tx	= Signal(bool(0))	
 trigger = Signal(bool(0))
 led2 = Signal(intbv(0)[9:])
 inst = with_uart(clk=clk,amphenol=amphenol,fpga_rx=fpga_rx,fpga_tx=fpga_tx,trigger=trigger,led2=led2,reset=reset)
