@@ -46,17 +46,14 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 	@always_comb
 	def trigger_finger():
 		masked_trigger.next = trigger and all_data_received
+		trigger_reset.next = masked_trigger
 
 	@always_comb
 	def when_done():
-		trigger_reset.next = masked_trigger
 		if (sched_len == sched_index) and all_data_received:
 			done.next = 1
 		else:
 			done.next = 0
-
-	modules.append(when_done)
-	modules.append(trigger_finger)
 
 
 	whichram = Signal(intbv(0)[8:])
@@ -291,7 +288,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			N=N
 		)
 
-	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring
+	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring,when_done,trigger_finger
 
 clk = Signal(bool(0))
 hex_freq = Signal(intbv(0,min=0,max=int(3.2e9)))
