@@ -7,7 +7,7 @@ from pyprind import ProgBar #just for funsies.
 
 
 @block
-def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
+def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger,led2):
 	N=9
 	sched_len = Signal(intbv(0,min=0,max=128))
 
@@ -286,14 +286,21 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 			N=N
 		)
 
-	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring,when_done,trigger_finger
+	@always_comb
+	def led_wiring():
+		led2(8).next = all_data_received
+		for i in range(8):
+			led2(i).next = whichram[i]
+
+	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring,when_done,trigger_finger,led_wiring
 
 clk = Signal(bool(0))
 hex_freq = Signal(intbv(0,min=0,max=int(3.2e9)))
 fpga_rx	= Signal(bool(0))
 fpga_tx	= Signal(bool(0))
 trigger = Signal(bool(0))
-inst = with_uart(clk,hex_freq,fpga_rx=fpga_rx,fpga_tx=fpga_tx,trigger=trigger)
+led2 = Signal(intbv(0)[9:])
+inst = with_uart(clk,hex_freq,fpga_rx=fpga_rx,fpga_tx=fpga_tx,trigger=trigger,led2=led2)
 inst.convert()
 # inst.config_sim(trace=True)
 # inst.run_sim(sim_time)
