@@ -43,7 +43,7 @@ def with_uart(clk,hex_freq,fpga_rx,fpga_tx,trigger):
 		else:
 			start.next = 0
 
-	@always_seq(clk.posedge,reset=reset)
+	@always_comb
 	def trigger_finger():
 		masked_trigger.next = trigger and all_data_received
 
