@@ -119,7 +119,7 @@ def m_manager(
 		output (which is what the PTS needs. It steps through the frequency schedule.'''
 
 		if state == t_state.WAIT:
-			dec_clk.next                	= 0
+			# dec_clk.next                	= 0
 			add_o.next                  	= 0
 			sub_o.next                  	= 0
 			frequency_controller_en.next	= False
@@ -128,7 +128,7 @@ def m_manager(
 			if start == True:
 				state.next = t_state.REACH_DESIRED
 		elif state == t_state.REACH_DESIRED and not quit_turnedon:
-			dec_clk.next                	= t_step_clk
+			# dec_clk.next                	= t_step_clk
 			add_o.next                  	= add_o_int
 			sub_o.next                  	= sub_o_int
 			frequency_controller_en.next	= True
