@@ -7,11 +7,15 @@ from pyprind import ProgBar #just for funsies.
 
 
 @block
-def with_uart(clk,hex_freq,amphenol,fpga_rx,fpga_tx,trigger,led2):
+def with_uart(clk,amphenol,fpga_rx,fpga_tx,trigger,led2,reset):
 	N=9
+	hex_freq = Signal(intbv(0)[36:])
 	sched_len = Signal(intbv(0,min=0,max=128))
-
+	# amphenol.driven=True
 	modules = []
+
+	led2_l = [Signal(False) for i in range(9)]
+	led2_i = ConcatSignal(*reversed(led2_l))
 
 	#define the schedule
 	#note that all these variables are the same length
@@ -23,7 +27,7 @@ def with_uart(clk,hex_freq,amphenol,fpga_rx,fpga_tx,trigger,led2):
 	sched_index	= Signal(intbv(0,min=0)[8:])
 
 	#define the reset signal
-	reset = ResetSignal(0,active=1,async=True)
+	# reset = ResetSignal(0,active=1,async=True)
 
 	#define rom-manager handshaking signals
 	notclock = Signal(bool(1))
@@ -277,9 +281,9 @@ def with_uart(clk,hex_freq,amphenol,fpga_rx,fpga_tx,trigger,led2):
 
 	dec = m_dec(
 			clk=dec_clk,
+			q=hex_freq,
 			add=add,
 			sub=sub,
-			q=hex_freq,
 			bq=curr_freq,
 			incr=incr,
 			reset=reset,
@@ -287,26 +291,30 @@ def with_uart(clk,hex_freq,amphenol,fpga_rx,fpga_tx,trigger,led2):
 		)
 
 	pts_connections = pts_controller(
-			hex_freq,
-			pts_enable=Signal(True),
+			hex_freq=hex_freq,
+			pts_enable=True,
 			amphenol=amphenol
 		)
+
 	@always_comb
 	def led_wiring():
-		led2[8].next = all_data_received
+		for i in range(9):
+			led2.next = led2_i
+
+		led2_l[8].next = all_data_received
 		for i in range(8):
-			led2[i].next = whichram[i]
+			led2_l[i].next = whichram[i]
 
 	return manager,dec,modules,schedule_arbiter,comms_arbiter(),clockinverter,determine_sched_len,ramwiring,when_done,trigger_finger,led_wiring,pts_connections
 
+reset = ResetSignal(0,active=1,async=False)
 clk = Signal(bool(0))
-hex_freq = Signal(intbv(0,min=0,max=int(3.2e9)))
-amphenol = Signal(intbv(0))[50:]
+amphenol = Signal(intbv(0)[50:])
 fpga_rx	= Signal(bool(0))
 fpga_tx	= Signal(bool(0))
 trigger = Signal(bool(0))
 led2 = Signal(intbv(0)[9:])
-inst = with_uart(clk=clk,amphenol=amphenol,hex_freq=hex_freq,fpga_rx=fpga_rx,fpga_tx=fpga_tx,trigger=trigger,led2=led2)
+inst = with_uart(clk=clk,amphenol=amphenol,fpga_rx=fpga_rx,fpga_tx=fpga_tx,trigger=trigger,led2=led2,reset=reset)
 inst.convert()
 # inst.config_sim(trace=True)
 # inst.run_sim(sim_time)
