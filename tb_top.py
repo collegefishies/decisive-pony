@@ -113,6 +113,13 @@ def write_hold(time,when):
 # 	return pc_uart(baud_clk,fpga_rx,address=data,data=intbv(int('FFFFFFFF',16)),when=when)
 
 @block
+def write_done(when):
+	hold_address = intbv(22)[8:]
+	data = intbv(0)[32:]
+
+	return pc_uart(baud_clk,fpga_rx,address=hold_address,data=data,when=when)
+
+@block
 def trigger_signal(baud_clk,trigger,when):
 
 	@instance
@@ -185,7 +192,7 @@ def testbench():
 	stimulus.append(write_hold(time=0,when=100+11*waittime+waittime))
 
 	#trigger
-	stimulus.append(trigger_signal(baud_clk,trigger,when=100+12*waittime+waittime))
+	stimulus.append(write_done(13*waittime))
 	stimulus.append(trigger_signal(baud_clk,trigger,when=100+13*waittime+waittime))
 	stimulus.append(trigger_signal(baud_clk,trigger,when=100+14*waittime+waittime))
 	stimulus.append(trigger_signal(baud_clk,trigger,when=100+15*waittime+waittime))
